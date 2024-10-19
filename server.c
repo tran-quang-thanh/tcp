@@ -29,7 +29,7 @@ void str_ser(int sockfd)
 	}
 
 	ack.num = 1;
-	ack.len = 0;
+	ack.status = 1;
 
 	if ((n = send(sockfd, &ack, 2, 0))==-1) {
 			printf("send error!");								//send the ack
