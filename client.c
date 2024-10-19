@@ -49,7 +49,7 @@ float str_cli(FILE *fp, int sockfd, long *len)
 		exit(1);
 	}
 
-	if (ack.num != 1|| ack.len != 0) {
+	if (ack.num != 1|| ack.status != 1) {
 		printf("error in transmission\n");
   }
 

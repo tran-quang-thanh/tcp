@@ -1,10 +1,11 @@
 #include "checksum.h"
+#include <math.h>
 
-unsigned int reverse(unsigned x);
+uint32_t reverse(uint32_t x);
 
-unsigned int crc32(char* message) {
+uint32_t crc32(char* message) {
   int i, j;
-  unsigned int byte, crc;
+  uint32_t byte, crc;
 
   i = 0;
   crc = 0xFFFFFFFF;
@@ -24,7 +25,7 @@ unsigned int crc32(char* message) {
   return reverse(~crc);
 }
 
-unsigned reverse(unsigned x) {
+uint32_t reverse(uint32_t x) {
    x = ((x & 0x55555555) <<  1) | ((x >>  1) & 0x55555555);
    x = ((x & 0x33333333) <<  2) | ((x >>  2) & 0x33333333);
    x = ((x & 0x0F0F0F0F) <<  4) | ((x >>  4) & 0x0F0F0F0F);

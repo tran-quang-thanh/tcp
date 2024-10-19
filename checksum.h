@@ -1,6 +1,8 @@
 #ifndef CHECKSUM_H
 #define CHECKSUM_H
 
-unsigned int crc32(char* message);
+#include <unistd.h>
+
+uint32_t crc32(char* message);
 
 #endif
