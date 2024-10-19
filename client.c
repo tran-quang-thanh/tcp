@@ -7,7 +7,8 @@ float str_cli(FILE *fp, int sockfd, long *len)
 {
 	char *buf;
 	long lsize, ci;
-	char sends[DATALEN];
+	// char sends[DATALEN];
+  struct pack_so packet;
 	struct ack_so ack;
 	int n, slen;
 	float time_inv = 0.0;
@@ -35,8 +36,9 @@ float str_cli(FILE *fp, int sockfd, long *len)
     } else { 
 			slen = DATALEN;
     }
-		memcpy(sends, (buf+ci), slen);
-		n = send(sockfd, &sends, slen, 0);
+		memcpy(packet.data, (buf+ci), slen);
+    packet.len = slen;
+		n = send(sockfd, &packet, PACKLEN, 0);
 		if(n == -1) {
 			printf("send error!");								//send the data
 			exit(1);
