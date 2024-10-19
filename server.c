@@ -39,13 +39,18 @@ int receive_packet(int sockfd, long lseek) {
     return 0;
   }
 
-  ack.num = 1;
+  ack.num = packet.num;
 	ack.status = 1;
 
 	if (send(sockfd, &ack, 2, 0) == -1) {
     printf("send error!");								//send the ack
     return 0;
 	}
+
+  if (!ack.status) {
+    printf("Check sum fails");
+    return 0;
+  }
 
   if (packet.data[packet.len - 1] == '\0')									//if it is the end of the file
   {

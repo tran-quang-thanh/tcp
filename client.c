@@ -5,7 +5,7 @@ char *buf;
 long lsize, ci = 0;
 struct pack_so packet;
 struct ack_so ack;
-int n, slen;
+int n, slen, pack_count, pack_num = 0;
 float time_inv = 0.0;
 struct timeval sendt, recvt;
 
@@ -27,6 +27,7 @@ float str_cli(FILE *fp, int sockfd, long *len)
 	fread (buf, 1, lsize, fp);
 
 	buf[lsize] ='\0';									//append the end byte
+  pack_count = (lsize + 1) / DATALEN + ((lsize + 1) % DATALEN != 0);
 	gettimeofday(&sendt, NULL);							//get the current time
 
 	while (ci <= lsize) {
@@ -43,6 +44,7 @@ float str_cli(FILE *fp, int sockfd, long *len)
     }
 
 		ci += slen;
+    pack_num++;
 	}
 
 	gettimeofday(&recvt, NULL);
@@ -55,6 +57,9 @@ float str_cli(FILE *fp, int sockfd, long *len)
 int send_packet(int sockfd) {
   memcpy(packet.data, (buf+ci), slen);
   packet.len = slen;
+  packet.count = pack_count;
+  packet.num = pack_num;
+  packet.crc = crc32(packet.data);
 
   int tries = 0;
   while (tries < TIMEOUT) {
@@ -63,12 +68,12 @@ int send_packet(int sockfd) {
       continue;
     }
 
-    if ((n= recv(sockfd, &ack, 2, 0)) == -1) {
+    if ((n = recv(sockfd, &ack, 2, 0)) == -1) {
       tries++;
       continue;
     }
 
-    if (ack.num != 1 || ack.status != 1) {
+    if (ack.status != 1) {
       tries++;
       continue;
     }
