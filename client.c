@@ -1,20 +1,19 @@
 #include "client.h"
 #include "checksum.h"
 
+char *buf;
+long lsize, ci = 0;
+struct pack_so packet;
+struct ack_so ack;
+int n, slen;
+float time_inv = 0.0;
+struct timeval sendt, recvt;
+
 void tv_sub(struct  timeval *out, struct timeval *in);
+int send_packet(int sockfd);
 
 float str_cli(FILE *fp, int sockfd, long *len)
 {
-	char *buf;
-	long lsize, ci;
-	// char sends[DATALEN];
-  struct pack_so packet;
-	struct ack_so ack;
-	int n, slen;
-	float time_inv = 0.0;
-	struct timeval sendt, recvt;
-	ci = 0;
-
 	fseek(fp, 0, SEEK_END);
 	lsize = ftell(fp);
 	rewind(fp);
@@ -36,30 +35,48 @@ float str_cli(FILE *fp, int sockfd, long *len)
     } else { 
 			slen = DATALEN;
     }
-		memcpy(packet.data, (buf+ci), slen);
-    packet.len = slen;
-		n = send(sockfd, &packet, PACKLEN, 0);
-		if(n == -1) {
-			printf("send error!");								//send the data
-			exit(1);
-		}
+
+		int success = send_packet(sockfd);
+    if (!success) {
+      printf("error in transmission\n");
+      exit(1);
+    }
+
 		ci += slen;
 	}
-
-	if ((n= recv(sockfd, &ack, 2, 0))==-1) {                                   //receive the ack
-		printf("error when receiving\n");
-		exit(1);
-	}
-
-	if (ack.num != 1|| ack.status != 1) {
-		printf("error in transmission\n");
-  }
 
 	gettimeofday(&recvt, NULL);
 	*len= ci;                                                         //get current time
 	tv_sub(&recvt, &sendt);                                                                 // get the whole trans time
 	time_inv += (recvt.tv_sec)*1000.0 + (recvt.tv_usec)/1000.0;
 	return(time_inv);
+}
+
+int send_packet(int sockfd) {
+  memcpy(packet.data, (buf+ci), slen);
+  packet.len = slen;
+
+  int tries = 0;
+  while (tries < TIMEOUT) {
+    if((n = send(sockfd, &packet, PACKLEN, 0)) == -1) {
+      tries++;
+      continue;
+    }
+
+    if ((n= recv(sockfd, &ack, 2, 0)) == -1) {
+      tries++;
+      continue;
+    }
+
+    if (ack.num != 1 || ack.status != 1) {
+      tries++;
+      continue;
+    }
+
+    return 1;
+  }
+
+  return 0;
 }
 
 void tv_sub(struct timeval *out, struct timeval *in)
